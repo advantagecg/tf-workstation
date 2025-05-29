@@ -12,8 +12,3 @@ module "create_new_account" {
   
 }
 
-
-
--rw-r--r--   1 root root 2358 May 29 01:43 79c585a2557910d.crt
--rw-r--r--   1 root root 2358 May 29 01:43 79c585a2557910d.pem
--rw-r--r--   1 root root 3095 May 29 01:43 gd_bundle-g2.crt
