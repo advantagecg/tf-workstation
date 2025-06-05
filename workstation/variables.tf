@@ -1,22 +1,16 @@
-# Toggles
 variable "vpc_enabled" {
   type    = bool
   default = true
 }
 
-variable "efs_enabled" {
-  type    = bool
-  default = true
-}
-
-variable "db_enabled" {
-  type    = bool
-  default = true
-}
-
-# VPC creation variables
 variable "cidr_block" {
   type = string
+}
+variable "profile" {
+  
+}
+variable "region" {
+  
 }
 
 variable "vpc_name" {
@@ -60,7 +54,6 @@ variable "tags" {
   default = {}
 }
 
-# Existing VPC resources (when vpc_enabled = false)
 variable "existing_vpc_id" {
   type    = string
   default = ""
@@ -76,14 +69,18 @@ variable "existing_default_sg_id" {
   default = ""
 }
 
-# EFS variables
+variable "efs_enabled" {
+  type    = bool
+  default = false
+}
+
 variable "efs_name" {
   type = string
 }
 
 variable "efs_encrypted" {
   type    = bool
-  default = true
+  default = false
 }
 
 variable "efs_performance_mode" {
@@ -107,7 +104,7 @@ variable "efs_attach_policy" {
 }
 
 variable "efs_policy_statements" {
-  type    = list(string)
+  type    = list(any)
   default = []
 }
 
@@ -116,29 +113,38 @@ variable "efs_tags" {
   default = {}
 }
 
-# DB variables
+variable "db_enabled" {
+  type    = bool
+  default = false
+}
+
 variable "db_identifier" {
   type = string
 }
 
 variable "db_engine" {
-  type = string
+  type    = string
+  default = "sqlserver-se" # MSSQL Standard edition as example
 }
 
 variable "db_engine_version" {
-  type = string
+  type    = string
+  default = "15.00.4073.23.v1" # example version
 }
 
 variable "db_instance_class" {
-  type = string
+  type    = string
+  default = "db.m5.large"
 }
 
 variable "db_storage_type" {
-  type = string
+  type    = string
+  default = "gp2"
 }
 
 variable "db_allocated_storage" {
-  type = number
+  type    = number
+  default = 100
 }
 
 variable "allow_major_version_upgrade" {
@@ -155,13 +161,13 @@ variable "db_username" {
 }
 
 variable "db_password" {
-  type      = string
+  type = string
   sensitive = true
 }
 
 variable "db_port" {
   type    = number
-  default = 3306
+  default = 1433
 }
 
 variable "iam_auth_enabled" {
@@ -171,7 +177,7 @@ variable "iam_auth_enabled" {
 
 variable "maintenance_window" {
   type    = string
-  default = "sun:23:00-mon:01:30"
+  default = "Sun:23:00-Sun:23:30"
 }
 
 variable "backup_window" {
@@ -204,18 +210,14 @@ variable "create_db_subnet_group" {
   default = true
 }
 
-variable "subnet_ids" {
-  type = list(string)
-}
-
 variable "db_family" {
   type    = string
-  default = ""
+  default = "sqlserver-se-15"
 }
 
 variable "db_major_engine_version" {
   type    = string
-  default = ""
+  default = "15"
 }
 
 variable "db_deletion_protection" {
