@@ -1,0 +1,4 @@
+cd workstation
+terraform init
+terraform plan -var-file="vars/dev.tfvars"
+terraform apply -var-file="vars/dev.tfvars"
