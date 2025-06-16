@@ -49,7 +49,7 @@ variable "enable_vpn_gateway" {
   default = false
 }
 
-variable "tags" {
+variable "db_tags" {
   type    = map(string)
   default = {}
 }
@@ -200,10 +200,7 @@ variable "create_monitoring_role" {
   default = false
 }
 
-variable "tags" {
-  type    = map(string)
-  default = {}
-}
+
 
 variable "create_db_subnet_group" {
   type    = bool
