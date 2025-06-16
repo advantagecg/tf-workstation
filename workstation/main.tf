@@ -1,12 +1,12 @@
 module "account_setup" {
-  source        = "./modules/account-setup"
+  source        = "git@github.com:advantagecg/tf-blueprint.git//modules/account-setup?ref=eks"
   count         = var.enable_account_setup ? 1 : 0
   account_name  = var.account_name
   account_email = var.account_email
 }
 
 module "vpc" {
-  source               = "./modules/vpc"
+  source        = "git@github.com:advantagecg/tf-blueprint.git//modules/vpc?ref=eks"
   count                = var.enable_vpc ? 1 : 0
   name                 = var.vpc_name
   vpc_cidr             = var.vpc_cidr
@@ -17,7 +17,7 @@ module "vpc" {
 }
 
 module "security_groups" {
-  source        = "./modules/security-groups"
+  source        = "git@github.com:advantagecg/tf-blueprint.git//modules/security-groups?ref=eks"
   count         = var.enable_eks ? 1 : 0
   name          = var.vpc_name
   vpc_id        = module.vpc[0].vpc_id
@@ -27,12 +27,14 @@ module "security_groups" {
 }
 
 module "iam" {
-  source = "./modules/iam"
+  source        = "git@github.com:advantagecg/tf-blueprint.git//modules/iam?ref=eks"
   count  = var.enable_eks ? 1 : 0
+  name  = var.cluster_name
+  tags  = var.tags
 }
 
 module "eks" {
-  source              = "./modules/eks"
+  source        = "git@github.com:advantagecg/tf-blueprint.git//modules/eks?ref=eks"
   count               = var.enable_eks ? 1 : 0
   name                = var.cluster_name
   kubernetes_version  = var.kubernetes_version
@@ -48,7 +50,7 @@ module "eks" {
 }
 
 module "eks_fargate" {
-  source                = "./modules/eks-fargate"
+  source        = "git@github.com:advantagecg/tf-blueprint.git//modules/eks-fargate?ref=eks"
   count                 = var.enable_fargate ? 1 : 0
   name                  = var.cluster_name
   cluster_name          = module.eks[0].cluster_name
@@ -57,14 +59,9 @@ module "eks_fargate" {
   tags                  = var.tags
 }
 
-module "eks_oidc" {
-  source = "./modules/oidc"
-  count  = var.enable_eks ? 1 : 0
-  cluster_name = module.eks[0].cluster_name
-}
 
 module "alb_ingress" {
-  source               = "./modules/alb-ingress"
+  source        = "git@github.com:advantagecg/tf-blueprint.git//modules/alb-ingress?ref=eks"
   count                = var.enable_alb_ingress ? 1 : 0
   cluster_name         = module.eks[0].cluster_name
   region               = var.aws_region
@@ -77,7 +74,7 @@ module "alb_ingress" {
 }
 
 module "ecr" {
-  source           = "./modules/ecr"
+  source        = "git@github.com:advantagecg/tf-blueprint.git//modules/ecr?ref=eks"
   count            = var.enable_ecr ? 1 : 0
   repository_names = var.repository_names
   scan_on_push     = var.scan_on_push
