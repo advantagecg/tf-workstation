@@ -1,10 +1,7 @@
 provider "aws" {
-  alias  = "new_account"
-  region = var.region
-  profile = var.profile   
-
-
-  assume_role {
-    role_arn = "arn:aws:iam::${aws_organizations_account.new_account[0].id}:role/OrganizationAccountAccessRole"
-  }
+  region  = var.aws_region
+  profile = var.aws_profile
 }
+
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}

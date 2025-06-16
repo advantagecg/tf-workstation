@@ -1,87 +1,108 @@
-module "create_new_account" {
-  source = "git@github.com:advantagecg/tf-blueprint.git//modules/accounts?ref=master"
-
-  new_account_is_enabled  = var.new_account_is_enabled
-  name_account            = var.name_account
-  email_account           = var.email_account
-  account_env             = var.account_env
-  account_team            = var.account_team
-  new_account_user_name   = var.new_account_user_name
-  region                  = var.region
-}
-module "vpc" {
-  source = "git@github.com:advantagecg/tf-blueprint.git//modules/vpc?ref=master"
-  count  = var.vpc_enabled ? 1 : 0
-  cidr_block              = var.cidr_block
-  vpc_name                = var.vpc_name
-  public_subnets          = var.public_subnets
-  private_subnets         = var.private_subnets
-  azs                     = var.azs
-  enable_internet_gateway = var.enable_internet_gateway
-  enable_nat_gateway      = var.enable_nat_gateway
-  enable_route_tables     = var.enable_route_tables
-  enable_vpn_gateway      = var.enable_vpn_gateway
-  tags                    = var.tags
-}
-module "efs" {
-  source  = "git@github.com:advantagecg/tf-blueprint.git//modules/efs?ref=master"
-  count  = var.efs_enabled ? 1 : 0
-  name                             = var.efs_name
-  encrypted                        = var.efs_encrypted
-  performance_mode                 = var.efs_performance_mode
-  throughput_mode                  = var.efs_throughput_mode
-  provisioned_throughput_in_mibps = var.efs_provisioned_throughput_in_mibps
-  attach_policy                    = var.efs_attach_policy
-  policy_statements                = var.efs_policy_statements
-  mount_targets = {
-    for az, subnet_id in var.efs_subnet_ids :
-    az => {
-      subnet_id       = subnet_id
-      security_groups = var.efs_security_group_ids
+terraform {
+  required_version = ">= 1.3"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
     }
   }
-  tags = var.efs_tags
+
+  backend "s3" {
+    bucket         = "your-terraform-state-bucket"
+    key            = "dev/terraform.tfstate"
+    region         = "us-west-2"
+    dynamodb_table = "terraform-locks"
+  }
 }
 
-
-module "db" {
-  source  = "git@github.com:advantagecg/tf-blueprint.git//modules/rds?ref=master"
-  count  = var.db_enabled ? 1 : 0
-
-  identifier                          = var.db_identifier
-  engine                              = var.db_engine
-  engine_version                      = var.db_engine_version
-  instance_class                      = var.db_instance_class
-  storage_type                        = var.db_storage_type
-  allocated_storage                   = var.db_allocated_storage
-  allow_major_version_upgrade         = var.allow_major_version_upgrade
-
-  db_name                             = var.db_name
-  username                            = var.db_username
-  password                            = var.db_password
-  port                                = var.db_port
-
-  iam_database_authentication_enabled = var.iam_auth_enabled
-  vpc_security_group_ids              = var.vpc_security_group_ids
-
-  maintenance_window                  = var.maintenance_window
-  backup_window                       = var.backup_window
-
-  monitoring_interval                 = var.monitoring_interval
-  monitoring_role_name                = var.monitoring_role_name
-  create_monitoring_role              = var.create_monitoring_role
-
-  tags                                = var.tags
-
-  create_db_subnet_group              = var.create_db_subnet_group
-  subnet_ids                          = var.subnet_ids
-
-  family                              = var.db_family
-  major_engine_version                = var.db_major_engine_version
-  deletion_protection                 = var.db_deletion_protection
-
-  parameters                          = var.db_parameters
-  options                             = var.db_options
+provider "aws" {
+  region  = var.aws_region
+  profile = var.aws_profile
 }
 
+module "account_setup" {
+  source        = "./modules/account-setup"
+  count         = var.enable_account_setup ? 1 : 0
+  account_name  = var.account_name
+  account_email = var.account_email
+}
 
+module "vpc" {
+  source               = "./modules/vpc"
+  count                = var.enable_vpc ? 1 : 0
+  name                 = var.vpc_name
+  vpc_cidr             = var.vpc_cidr
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  availability_zones   = var.availability_zones
+  tags                 = var.tags
+}
+
+module "security_groups" {
+  source        = "./modules/security-groups"
+  count         = var.enable_eks ? 1 : 0
+  name          = var.vpc_name
+  vpc_id        = module.vpc[0].vpc_id
+  node_cidrs    = [var.vpc_cidr]
+  cluster_cidrs = [var.vpc_cidr]
+  tags          = var.tags
+}
+
+module "iam" {
+  source = "./modules/iam"
+  count  = var.enable_eks ? 1 : 0
+}
+
+module "eks" {
+  source              = "./modules/eks"
+  count               = var.enable_eks ? 1 : 0
+  name                = var.cluster_name
+  kubernetes_version  = var.kubernetes_version
+  cluster_role_arn    = module.iam[0].eks_cluster_role_arn
+  node_role_arn       = module.iam[0].eks_node_role_arn
+  subnet_ids_private  = module.vpc[0].private_subnets
+  cluster_sg_id       = module.security_groups[0].eks_cluster_sg_id
+  instance_types      = var.instance_types
+  min_capacity        = var.eks_min_size
+  max_capacity        = var.eks_max_size
+  desired_capacity    = var.eks_desired_capacity
+  ssh_key_name        = var.ssh_key_name
+}
+
+module "eks_fargate" {
+  source                = "./modules/eks-fargate"
+  count                 = var.enable_fargate ? 1 : 0
+  name                  = var.cluster_name
+  cluster_name          = module.eks[0].cluster_name
+  private_subnet_ids    = module.vpc[0].private_subnets
+  namespace             = var.fargate_namespace
+  tags                  = var.tags
+}
+
+module "eks_oidc" {
+  source = "./modules/oidc"
+  count  = var.enable_eks ? 1 : 0
+  cluster_name = module.eks[0].cluster_name
+}
+
+module "alb_ingress" {
+  source               = "./modules/alb-ingress"
+  count                = var.enable_alb_ingress ? 1 : 0
+  cluster_name         = module.eks[0].cluster_name
+  region               = var.aws_region
+  vpc_id               = module.vpc[0].vpc_id
+  oidc_provider_arn    = module.eks_oidc[0].oidc_provider_arn
+  oidc_provider_url    = module.eks_oidc[0].oidc_provider_url
+  namespace            = var.alb_namespace
+  service_account_name = var.alb_service_account_name
+  tags                 = var.tags
+}
+
+module "ecr" {
+  source           = "./modules/ecr"
+  count            = var.enable_ecr ? 1 : 0
+  repository_names = var.repository_names
+  scan_on_push     = var.scan_on_push
+  tag_mutability   = var.tag_mutability
+  tags             = var.tags
+}

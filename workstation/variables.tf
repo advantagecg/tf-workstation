@@ -1,233 +1,137 @@
-variable "vpc_enabled" {
-  type    = bool
-  default = true
+variable "aws_region" {
+  type        = string
+  default     = "us-west-2"
 }
 
-variable "cidr_block" {
+variable "aws_profile" {
+  type        = string
+  default     = "default"
+}
+
+# Toggles
+variable "enable_account_setup" {
+  type        = bool
+  default     = false
+}
+
+variable "enable_vpc" {
+  type        = bool
+  default     = true
+}
+
+variable "enable_eks" {
+  type        = bool
+  default     = true
+}
+
+variable "enable_fargate" {
+  type        = bool
+  default     = false
+}
+
+variable "enable_alb_ingress" {
+  type        = bool
+  default     = true
+}
+
+variable "enable_ecr" {
+  type        = bool
+  default     = true
+}
+
+# Account Setup
+variable "account_name" {
   type = string
 }
-variable "profile" {
-  
-}
-variable "region" {
-  
+
+variable "account_email" {
+  type = string
 }
 
+# VPC
 variable "vpc_name" {
   type = string
 }
 
-variable "public_subnets" {
+variable "vpc_cidr" {
+  type = string
+}
+
+variable "public_subnet_cidrs" {
   type = list(string)
 }
 
-variable "private_subnets" {
+variable "private_subnet_cidrs" {
   type = list(string)
 }
 
-variable "azs" {
+variable "availability_zones" {
   type = list(string)
 }
 
-variable "enable_internet_gateway" {
-  type    = bool
-  default = true
+# EKS
+variable "cluster_name" {
+  type = string
 }
 
-variable "enable_nat_gateway" {
-  type    = bool
-  default = true
-}
-
-variable "enable_route_tables" {
-  type    = bool
-  default = true
-}
-
-variable "enable_vpn_gateway" {
-  type    = bool
-  default = false
-}
-
-variable "db_tags" {
-  type    = map(string)
-  default = {}
-}
-
-variable "existing_vpc_id" {
+variable "kubernetes_version" {
   type    = string
-  default = ""
+  default = "1.29"
 }
 
-variable "existing_private_subnet_ids" {
+variable "instance_types" {
   type    = list(string)
-  default = []
+  default = ["t3.medium"]
 }
 
-variable "existing_default_sg_id" {
-  type    = string
-  default = ""
+variable "eks_min_size" {
+  type = number
 }
 
-variable "efs_enabled" {
-  type    = bool
-  default = false
+variable "eks_max_size" {
+  type = number
 }
 
-variable "efs_name" {
+variable "eks_desired_capacity" {
+  type = number
+}
+
+variable "ssh_key_name" {
   type = string
 }
 
-variable "efs_encrypted" {
-  type    = bool
-  default = false
-}
-
-variable "efs_performance_mode" {
-  type    = string
-  default = "generalPurpose"
-}
-
-variable "efs_throughput_mode" {
-  type    = string
-  default = "bursting"
-}
-
-variable "efs_provisioned_throughput_in_mibps" {
-  type    = number
-  default = 0
-}
-
-variable "efs_attach_policy" {
-  type    = bool
-  default = false
-}
-
-variable "efs_policy_statements" {
-  type    = list(any)
-  default = []
-}
-
-variable "efs_tags" {
-  type    = map(string)
-  default = {}
-}
-
-variable "db_enabled" {
-  type    = bool
-  default = false
-}
-
-variable "db_identifier" {
+# Fargate
+variable "fargate_namespace" {
   type = string
 }
 
-variable "db_engine" {
+# ALB Ingress
+variable "alb_namespace" {
   type    = string
-  default = "sqlserver-se" # MSSQL Standard edition as example
+  default = "kube-system"
 }
 
-variable "db_engine_version" {
+variable "alb_service_account_name" {
   type    = string
-  default = "15.00.4073.23.v1" # example version
+  default = "aws-load-balancer-controller"
 }
 
-variable "db_instance_class" {
-  type    = string
-  default = "db.m5.large"
+# ECR
+variable "repository_names" {
+  type = list(string)
 }
 
-variable "db_storage_type" {
-  type    = string
-  default = "gp2"
-}
-
-variable "db_allocated_storage" {
-  type    = number
-  default = 100
-}
-
-variable "allow_major_version_upgrade" {
-  type    = bool
-  default = false
-}
-
-variable "db_name" {
-  type = string
-}
-
-variable "db_username" {
-  type = string
-}
-
-variable "db_password" {
-  type = string
-  sensitive = true
-}
-
-variable "db_port" {
-  type    = number
-  default = 1433
-}
-
-variable "iam_auth_enabled" {
-  type    = bool
-  default = false
-}
-
-variable "maintenance_window" {
-  type    = string
-  default = "Sun:23:00-Sun:23:30"
-}
-
-variable "backup_window" {
-  type    = string
-  default = "03:00-06:00"
-}
-
-variable "monitoring_interval" {
-  type    = number
-  default = 60
-}
-
-variable "monitoring_role_name" {
-  type    = string
-  default = ""
-}
-
-variable "create_monitoring_role" {
-  type    = bool
-  default = false
-}
-
-
-
-variable "create_db_subnet_group" {
+variable "scan_on_push" {
   type    = bool
   default = true
 }
 
-variable "db_family" {
+variable "tag_mutability" {
   type    = string
-  default = "sqlserver-se-15"
+  default = "IMMUTABLE"
 }
 
-variable "db_major_engine_version" {
-  type    = string
-  default = "15"
-}
-
-variable "db_deletion_protection" {
-  type    = bool
-  default = false
-}
-
-variable "db_parameters" {
-  type    = map(string)
-  default = {}
-}
-
-variable "db_options" {
-  type    = map(string)
-  default = {}
+# Tags
+variable "tags" {
+  type = map(string)
 }
