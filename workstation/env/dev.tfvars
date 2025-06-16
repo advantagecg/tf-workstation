@@ -1,5 +1,5 @@
 aws_region         = "us-west-2"
-aws_profile        = "dev"
+aws_profile        = "default"
 
 enable_account_setup = true
 enable_vpc           = true

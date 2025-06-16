@@ -33,8 +33,10 @@ module "iam" {
   tags  = var.tags
 }
 
+
+
 module "eks" {
-  source        = "git@github.com:advantagecg/tf-blueprint.git//modules/eks-ec2?ref=eks"
+  source              = "git@github.com:advantagecg/tf-blueprint.git//modules/eks-ec2?ref=eks"
   count               = var.enable_eks ? 1 : 0
   name                = var.cluster_name
   kubernetes_version  = var.kubernetes_version
@@ -50,15 +52,23 @@ module "eks" {
 }
 
 module "eks_fargate" {
-  source        = "git@github.com:advantagecg/tf-blueprint.git//modules/eks-fargate?ref=eks"
+  source                = "git@github.com:advantagecg/tf-blueprint.git//modules/eks-fargate?ref=eks"
   count                 = var.enable_fargate ? 1 : 0
   name                  = var.cluster_name
   cluster_name          = module.eks[0].cluster_name
   private_subnet_ids    = module.vpc[0].private_subnets
   namespace             = var.fargate_namespace
   tags                  = var.tags
+  #pod_execution_role_arn = module.iam[0].fargate_pod_execution_role_arn
 }
 
+module "eks_oidc" {
+  source       = "git@github.com:advantagecg/tf-blueprint.git//modules/eks-oidc?ref=eks"
+  count        = var.enable_eks ? 1 : 0
+  cluster_name = module.eks[0].cluster_name
+  depends_on     = [module.eks]
+
+}
 
 module "alb_ingress" {
   source        = "git@github.com:advantagecg/tf-blueprint.git//modules/alb-ingress?ref=eks"

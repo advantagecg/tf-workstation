@@ -1,4 +1,4 @@
 cd workstation
 terraform init
-terraform plan -var-file="vars/dev.tfvars"
-terraform apply -var-file="vars/dev.tfvars"
+terraform plan -var-file="env/dev.tfvars"
+terraform apply -var-file="env/dev.tfvars"
