@@ -34,7 +34,7 @@ module "iam" {
 }
 
 module "eks" {
-  source        = "git@github.com:advantagecg/tf-blueprint.git//modules/eks?ref=eks"
+  source        = "git@github.com:advantagecg/tf-blueprint.git//modules/eks-ec2?ref=eks"
   count               = var.enable_eks ? 1 : 0
   name                = var.cluster_name
   kubernetes_version  = var.kubernetes_version

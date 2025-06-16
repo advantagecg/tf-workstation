@@ -36,5 +36,5 @@ tag_mutability   = "IMMUTABLE"
 
 tags = {
   Environment = "dev"
-  Project     = "virtualstockroom"
+  Project     = "agc"
 }
